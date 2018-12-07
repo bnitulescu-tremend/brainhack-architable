@@ -27,6 +27,22 @@ class ShapeDetector:
 	def nextboxid(self):
 		self.boxid = self.boxid + 1
 		return self.boxid
+		
+	def closestbox(self,x,y):
+		minid = 0
+		mindist = self.image.size * self.image.size
+		for b in self.boxes:
+			(bx, by, bw, bh) = b.box
+			cx = (bx + bw) / 2
+			cy = (by + bh) / 2
+			dx = max(abs(cx - x) - bw / 2, 0);
+			dy = max(abs(cx - y) - bh / 2, 0);
+			dist = dx * dx + dy * dy;
+			if dist < mindist:
+				mindist = dist
+				minid = b.id
+		return minid
+		
 
 	def process(self):
 		# load the image and resize it to a smaller factor so that
@@ -61,11 +77,19 @@ class ShapeDetector:
 			cY = int((M["m01"] / M["m00"]) * ratio)
 			shape = self.detect(c)
 			
+			displaytxt = shape
+			
 			if shape == "rectangle":
 				r = Box(self.nextboxid())
 				r.box = cv2.boundingRect(c)
-				r.text = "rectangle"
+				r.text = "rectangle {id}".format(id=r.id)
+				displaytxt = r.text
 				self.boxes.append(r)
+				
+			elif shape == "line":
+				l = Line()
+				l.box = cv2.boundingRect(c)
+				self.lines.append(l)
 			
 			# multiply the contour (x, y)-coordinates by the resize ratio,
 			# then draw the contours and the name of the shape on the image
@@ -73,15 +97,15 @@ class ShapeDetector:
 			c *= ratio
 			c = c.astype("int")
 			cv2.drawContours(image, [c], -1, (0, 255, 0), 2)
-			cv2.putText(image, shape, (cX, cY), cv2.FONT_HERSHEY_SIMPLEX,
+			cv2.putText(image, displaytxt, (cX, cY), cv2.FONT_HERSHEY_SIMPLEX,
 				0.5, (255, 0, 0), 2)
 
 		self.processed_image = image
 
-		if len(self.boxes) > 1 :		
-			l = Line()
-			l.boxes = [1,2]
-			self.lines.append(l)
+		for l in self.lines:
+			(x, y, w, h) = l.box
+			l.boxes = [ self.closestbox(x,y), self.closestbox(x+w,y+h) ]
+
 
 	def detect(self, c):
 		# initialize the shape name and approximate the contour
