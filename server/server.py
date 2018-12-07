@@ -49,6 +49,10 @@ def rmfile(filename):
     except OSError:
         pass
 def process(source_file_path):
+    sd = ShapeDetector(source_file_path)
+	sd.process()
+	return sd.processed_image, sd.boxes, sd.lines
+
     # load the image and resize it to a smaller factor so that
     # the shapes can be approximated better
     image = cv2.imread(source_file_path)
@@ -68,7 +72,6 @@ def process(source_file_path):
     cnts = cv2.findContours(thresh.copy(), cv2.RETR_EXTERNAL,
     	cv2.CHAIN_APPROX_SIMPLE)
     cnts = imutils.grab_contours(cnts)
-    sd = ShapeDetector()
 
     # loop over the contours
     for c in cnts:
