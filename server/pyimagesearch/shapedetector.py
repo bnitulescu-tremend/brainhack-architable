@@ -5,6 +5,8 @@ import cv2
 import numpy as np
 
 class Box:
+	def __init__(self, _id):
+		self.id = _id
 	type = "box"
 
 
@@ -19,7 +21,12 @@ class ShapeDetector:
 		self.boxes = []
 		self.lines = []
 		self.image = cv2.imread(source_file_path)
+		self.boxid = 0
 		pass
+		
+	def nextboxid(self):
+		self.boxid = self.boxid + 1
+		return self.boxid
 
 	def process(self):
 		# load the image and resize it to a smaller factor so that
@@ -41,7 +48,7 @@ class ShapeDetector:
 		cnts = cv2.findContours(thresh.copy(), cv2.RETR_EXTERNAL,
 			cv2.CHAIN_APPROX_SIMPLE)
 		cnts = imutils.grab_contours(cnts)
-
+		
 		# loop over the contours
 		for c in cnts:
 			# compute the center of the contour, then detect the name of the
@@ -53,7 +60,13 @@ class ShapeDetector:
 			cX = int((M["m10"] / M["m00"]) * ratio)
 			cY = int((M["m01"] / M["m00"]) * ratio)
 			shape = self.detect(c)
-
+			
+			if shape == "rectangle":
+				r = Box(self.nextboxid())
+				r.box = cv2.boundingRect(c)
+				r.text = "rectangle"
+				self.boxes.append(r)
+			
 			# multiply the contour (x, y)-coordinates by the resize ratio,
 			# then draw the contours and the name of the shape on the image
 			c = c.astype("float")
@@ -64,30 +77,11 @@ class ShapeDetector:
 				0.5, (255, 0, 0), 2)
 
 		self.processed_image = image
-		r1 = Box()
-		r1.id = 1
-		r1.text = "Box 1"
-		r1.box = [1,1,100,100]
 
-		r2 = Box()
-		r2.id = 2
-		r2.text = "Box 2"
-		r2.box = [200,1,300,100]
-
-		r3 = Box()
-		r3.id = 3
-		r3.text = "Box 2"
-		r3.box = [100,200,200,200]
-
-
-		l1 = Line()
-		l1.boxes = [1,3]
-
-		l2 = Line()
-		l2.boxes = [2,3]
-		
-		self.boxes = [r1, r2, r3]
-		self.lines = [l1, l2]
+		if len(self.boxes) > 1 :		
+			l = Line()
+			l.boxes = [1,2]
+			self.lines.append(l)
 
 	def detect(self, c):
 		# initialize the shape name and approximate the contour
@@ -96,12 +90,12 @@ class ShapeDetector:
 		approx = cv2.approxPolyDP(c, 0.04 * peri, True)
 
 		# if the shape is a triangle, it will have 3 vertices
-		if len(approx) == 3:
-			shape = "triangle"
+		#if len(approx) == 3:
+		#	shape = "triangle"
 
 		# if the shape has 4 vertices, it is either a square or
 		# a rectangle
-		elif len(approx) == 4:
+		if len(approx) >= 4:
 			# compute the bounding box of the contour and use the
 			# bounding box to compute the aspect ratio
 			(x, y, w, h) = cv2.boundingRect(approx)
@@ -112,8 +106,8 @@ class ShapeDetector:
 			shape = "square" if ar >= 0.95 and ar <= 1.05 else "rectangle"
 
 		# if the shape is a pentagon, it will have 5 vertices
-		elif len(approx) == 5:
-			shape = "pentagon"
+		#elif len(approx) == 5:
+		#	shape = "pentagon"
 
 		# otherwise, we assume the shape is a circle
 		else:

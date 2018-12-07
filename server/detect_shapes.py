@@ -31,6 +31,7 @@ thresh = cv2.Canny(blurred, 50, 200)
 # cv2.waitKey(0)
 
 
+
 # minLineLength = 20
 # maxLineGap = 5
 # lines = cv2.HoughLinesP(thresh,1,np.pi/180,100,minLineLength,maxLineGap)
@@ -51,7 +52,7 @@ sd = ShapeDetector()
 
 # loop over the contours
 for c in cnts:
-	print("Pe aici")
+	# print("Pe aici")
 	# compute the center of the contour, then detect the name of the
 	# shape using only the contour
 	M = cv2.moments(c)
@@ -70,6 +71,7 @@ for c in cnts:
 	cv2.drawContours(image, [c], -1, (0, 255, 0), 2)
 	cv2.putText(image, shape, (cX, cY), cv2.FONT_HERSHEY_SIMPLEX,
 		0.5, (255, 0, 0), 2)
+	
 
 # show the output image
 cv2.imshow("Image", image)
