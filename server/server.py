@@ -27,12 +27,14 @@ def index():
     rmfile(file_path)
     upload.save(file_path)
 
-    process(file_path)
+    img = process(file_path)
+
+    cv2.imwrite("{path}/{file}_processed{ext}".format(path=save_path, file=name, ext=ext), img)
 
     return HTTPResponse(
                 body='Processed. See Location header',
                 status=201,
-                headers={'Location': '/static/{0}'.format(upload.filename)}
+                headers={'Location': '/static/{file}_processed{ext}'.format(path=save_path, file=name, ext=ext)}
             )
 
 def get_save_path(filename):
@@ -89,5 +91,7 @@ def process(source_file_path):
     	cv2.putText(image, shape, (cX, cY), cv2.FONT_HERSHEY_SIMPLEX,
     		0.5, (255, 0, 0), 2)
 
+    return image
 
-run(host='localhost', port=8080)
+
+run(host='0.0.0.0', port=8080)
