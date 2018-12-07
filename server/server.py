@@ -5,6 +5,7 @@ import os
 import imutils
 import cv2
 import numpy as np
+from generateModel import generateArchiFile
 
 save_path = "/tmp/brainhack"
 
@@ -30,6 +31,7 @@ def index():
 
     # process image from disk
     img, boxes, lines = process(file_path)
+	generateArchiFile(boxes,lines,"{path}/{file}_processed{ext}".format(path=save_path, file=name, ext="archimate"))
 
     # write processed image on disk
 
@@ -37,9 +39,10 @@ def index():
 
 
     processed_url = '{scheme}://{host}/static/{file}_processed{ext}'.format(scheme=request.urlparts.scheme, host=request.get_header('host'), path=save_path, file=name, ext=ext)
+    archi_url = '{scheme}://{host}/static/{file}_processed{ext}'.format(scheme=request.urlparts.scheme, host=request.get_header('host'), path=save_path, file=name, ext="archimate")
     return HTTPResponse(
                 body={'processedFileUrl': processed_url,
-                    'archimateFileUrl' : processed_url,
+                    'archimateFileUrl' : archi_url,
                     'message': "We've processed for you the image. You're welcome!"},
                 status=201,
                 headers={'Location': processed_url}

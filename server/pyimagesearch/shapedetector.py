@@ -29,16 +29,18 @@ class ShapeDetector:
 		return self.boxid
 		
 	def closestbox(self,x,y):
+		print("{px}.{py}".format(px=x,py=y))
 		minid = 0
 		mindist = self.image.size * self.image.size
 		for b in self.boxes:
 			(bx, by, bw, bh) = b.box
-			cx = (bx + bw) / 2
-			cy = (by + bh) / 2
+			cx = bx + bw / 2
+			cy = by + bh / 2
 			dx = max(abs(cx - x) - bw / 2, 0);
 			dy = max(abs(cx - y) - bh / 2, 0);
 			dist = dx * dx + dy * dy;
 			if dist < mindist:
+				print("{px}.{py}.{pw}.{ph}.{d}".format(px=bx,py=by,pw=bw,ph=bh,d=dist))
 				mindist = dist
 				minid = b.id
 		return minid
