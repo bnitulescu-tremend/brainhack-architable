@@ -10,7 +10,7 @@ from generateModel import generateArchiFile
 save_path = "/tmp/brainhack"
 
 
-@route('/static/<filepath:re:.*\.(jpg|jpeg|png)>')
+@route('/static/<filepath:re:.*\.(jpg|jpeg|png|archimate)>')
 def staticfile(filepath):
     return static_file(filepath, root = save_path)
 
