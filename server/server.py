@@ -29,7 +29,7 @@ def index():
     upload.save(file_path)
 
     # process image from disk
-    img = process(file_path)
+    img, boxes, lines = process(file_path)
 
     # write processed image on disk
 
@@ -58,8 +58,8 @@ def rmfile(filename):
         pass
 def process(source_file_path):
     sd = ShapeDetector(source_file_path)
-	sd.process()
-	return sd.processed_image, sd.boxes, sd.lines
+    sd.process()
+    return sd.processed_image, sd.boxes, sd.lines
 
 
 run(host='0.0.0.0', port=8080)

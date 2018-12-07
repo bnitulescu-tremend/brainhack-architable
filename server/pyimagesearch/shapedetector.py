@@ -1,5 +1,8 @@
 # import the necessary packages
 import cv2
+import imutils
+import cv2
+import numpy as np
 
 class Box:
 	type = "box"
@@ -17,7 +20,7 @@ class ShapeDetector:
 		self.lines = []
 		self.image = cv2.imread(source_file_path)
 		pass
-		
+
 	def process(self):
 		# load the image and resize it to a smaller factor so that
 		# the shapes can be approximated better
@@ -59,11 +62,33 @@ class ShapeDetector:
 			cv2.drawContours(image, [c], -1, (0, 255, 0), 2)
 			cv2.putText(image, shape, (cX, cY), cv2.FONT_HERSHEY_SIMPLEX,
 				0.5, (255, 0, 0), 2)
-				
+
 		self.processed_image = image
+		r1 = Box()
+		r1.id = 1
+		r1.text = "Box 1"
+		r1.box = [1,1,100,100]
+
+		r2 = Box()
+		r2.id = 2
+		r2.text = "Box 2"
+		r2.box = [200,1,300,100]
+
+		r3 = Box()
+		r3.id = 3
+		r3.text = "Box 2"
+		r3.box = [100,200,200,200]
+
+
+		l1 = Line()
+		l1.boxes = [1,3]
+
+		l2 = Line()
+		l2.boxes = [2,3]
+		
 		self.boxes = [r1, r2, r3]
 		self.lines = [l1, l2]
-		
+
 	def detect(self, c):
 		# initialize the shape name and approximate the contour
 		shape = "unidentified"
@@ -93,8 +118,6 @@ class ShapeDetector:
 		# otherwise, we assume the shape is a circle
 		else:
 			shape = "line"
-			object
-			self.objects.append()
 
 		# return the name of the shape
 		return shape
