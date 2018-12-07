@@ -9,8 +9,6 @@ class Box:
 		self.id = _id
 	type = "box"
 
-
-
 class Line:
 	type = "line"
 
@@ -29,7 +27,7 @@ class ShapeDetector:
 		return self.boxid
 		
 	def closestbox(self,x,y):
-		print("{px}.{py}".format(px=x,py=y))
+		#print("{px}.{py}".format(px=x,py=y))
 		minid = 0
 		mindist = self.image.size * self.image.size
 		for b in self.boxes:
@@ -39,8 +37,8 @@ class ShapeDetector:
 			dx = max(abs(cx - x) - bw / 2, 0);
 			dy = max(abs(cx - y) - bh / 2, 0);
 			dist = dx * dx + dy * dy;
+			#print("{i}:{px}.{py}.{pw}.{ph}=>{d}".format(px=bx,py=by,pw=bw,ph=bh,d=dist,i=b.id))
 			if dist < mindist:
-				print("{px}.{py}.{pw}.{ph}.{d}".format(px=bx,py=by,pw=bw,ph=bh,d=dist))
 				mindist = dist
 				minid = b.id
 		return minid
@@ -50,12 +48,12 @@ class ShapeDetector:
 		# load the image and resize it to a smaller factor so that
 		# the shapes can be approximated better
 		image = self.image
-		resized = imutils.resize(image, width=300)
-		ratio = image.shape[0] / float(resized.shape[0])
+		#resized = imutils.resize(image, width=300)
+		#ratio = image.shape[0] / float(resized.shape[0])
 
 		# convert the resized image to grayscale, blur it slightly,
 		# and threshold it
-		gray = cv2.cvtColor(resized, cv2.COLOR_BGR2GRAY)
+		gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 		blurred = cv2.GaussianBlur(gray, (5, 5), 0)
 		# thresh = cv2.threshold(blurred, 60, 255, cv2.THRESH_BINARY)[1]
 		thresh = cv2.Canny(blurred, 50, 200)
@@ -75,8 +73,8 @@ class ShapeDetector:
 			if M["m00"] == 0:
 				continue
 
-			cX = int((M["m10"] / M["m00"]) * ratio)
-			cY = int((M["m01"] / M["m00"]) * ratio)
+			cX = int((M["m10"] / M["m00"]))
+			cY = int((M["m01"] / M["m00"]))
 			shape = self.detect(c)
 			
 			displaytxt = shape
@@ -88,15 +86,20 @@ class ShapeDetector:
 				displaytxt = r.text
 				self.boxes.append(r)
 				
+				(x, y, w, h) = r.box
+				cv2.rectangle(image,(x,y),(x+w,y+h),(255,0,0),2)
+				
 			elif shape == "line":
 				l = Line()
 				l.box = cv2.boundingRect(c)
+				l.text = "line {id}".format(id=self.nextboxid())
+				displaytxt = l.text
 				self.lines.append(l)
 			
 			# multiply the contour (x, y)-coordinates by the resize ratio,
 			# then draw the contours and the name of the shape on the image
 			c = c.astype("float")
-			c *= ratio
+			#c *= ratio
 			c = c.astype("int")
 			cv2.drawContours(image, [c], -1, (0, 255, 0), 2)
 			cv2.putText(image, displaytxt, (cX, cY), cv2.FONT_HERSHEY_SIMPLEX,
