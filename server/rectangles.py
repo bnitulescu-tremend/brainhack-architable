@@ -1,5 +1,8 @@
 from pprint import pprint
 
+from generateModel import generateArchiFile
+
+
 class Box:
 	type = "box"
 
@@ -36,4 +39,6 @@ for b in boxes:
 	pprint(vars(b))
 for l in lines:
 	pprint(vars(l))
+
+generateArchiFile(boxes, lines, "testfile.archimate")
 
