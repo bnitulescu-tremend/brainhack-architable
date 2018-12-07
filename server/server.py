@@ -31,7 +31,7 @@ def index():
 
     # process image from disk
     img, boxes, lines = process(file_path)
-	generateArchiFile(boxes,lines,"{path}/{file}_processed{ext}".format(path=save_path, file=name, ext="archimate"))
+    generateArchiFile(boxes,lines,"{path}/{file}_processed{ext}".format(path=save_path, file=name, ext="archimate"))
 
     # write processed image on disk
 
