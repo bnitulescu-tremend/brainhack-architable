@@ -9,7 +9,7 @@ import numpy as np
 save_path = "/tmp/brainhack"
 
 
-@route('/static/<filepath:re:.*\.(jpg|jpeg|png|gif|ico|svg)>')
+@route('/static/<filepath:re:.*\.(jpg|jpeg|png)>')
 def staticfile(filepath):
     return static_file(filepath, root = save_path)
 
@@ -24,17 +24,25 @@ def index():
 
     file_path = get_save_path(upload.filename)
 
+    # save source image to disk
     rmfile(file_path)
     upload.save(file_path)
 
+    # process image from disk
     img = process(file_path)
+
+    # write processed image on disk
 
     cv2.imwrite("{path}/{file}_processed{ext}".format(path=save_path, file=name, ext=ext), img)
 
+
+    processed_url = '{scheme}://{host}/static/{file}_processed{ext}'.format(scheme=request.urlparts.scheme, host=request.get_header('host'), path=save_path, file=name, ext=ext)
     return HTTPResponse(
-                body='Processed. See Location header',
+                body={'processedFileUrl': processed_url,
+                    'archimateFileUrl' : processed_url,
+                    'message': "We've processed for you the image. You're welcome!"},
                 status=201,
-                headers={'Location': '/static/{file}_processed{ext}'.format(path=save_path, file=name, ext=ext)}
+                headers={'Location': processed_url}
             )
 
 def get_save_path(filename):
