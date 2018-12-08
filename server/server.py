@@ -97,7 +97,16 @@ def send_arhitecture_request(text_json):
             elif txt == "V":
                 ar.add("varnish")
             
-        print(ar.getjson())
+        arch_req=ar.getjson()
+        url = "http://88.99.210.90:8000"        
+        payload = arch_req
+        headers = {
+            'content-type': "application/json",
+             'cache-control': "no-cache"
+        }
+        response = requests.request("POST", url, data=payload, headers=headers, params=querystring)
+        pprint(payload)
+        pprint(response)
 
     except KeyError:
         return

@@ -3,6 +3,7 @@ import cv2
 import imutils
 import cv2
 import numpy as np
+from pprint import pprint
 
 class Box:
 	def __init__(self, _id):
