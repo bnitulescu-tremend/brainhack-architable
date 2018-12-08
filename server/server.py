@@ -104,7 +104,7 @@ def send_arhitecture_request(text_json):
             'content-type': "application/json",
              'cache-control': "no-cache"
         }
-        response = requests.request("POST", url, data=payload, headers=headers, params=querystring)
+        response = requests.request("POST", url, data=payload, headers=headers, params=querystring,timeout = 3)
         pprint(payload)
         pprint(response)
 
@@ -125,7 +125,7 @@ def trigger_recognize_text(file_url):
         'cache-control': "no-cache"
     }
 
-    response = requests.request("POST", url, data=payload, headers=headers, params=querystring)
+    response = requests.request("POST", url, data=payload, headers=headers, params=querystring, timeout = 5)
     pprint(payload)
     pprint(response)
     pprint(response.headers)
@@ -143,7 +143,7 @@ def get_recognize_text_response(operation_id):
     }
 
     time.sleep(3)
-    response = requests.request("GET", url, headers=headers)
+    response = requests.request("GET", url, headers=headers, timeout = 5)
     pprint(url)
     pprint(response.text)
     try:
