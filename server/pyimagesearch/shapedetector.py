@@ -45,7 +45,7 @@ class ShapeDetector:
 			cx = bx + bw / 2
 			cy = by + bh / 2
 			dx = max(abs(cx - x) - bw / 2, 0);
-			dy = max(abs(cx - y) - bh / 2, 0);
+			dy = max(abs(cy - y) - bh / 2, 0);
 			dist = dx * dx + dy * dy;
 			#print("{i}:{px}.{py}.{pw}.{ph}=>{d}".format(px=bx,py=by,pw=bw,ph=bh,d=dist,i=b.id))
 			if dist < mindist:
@@ -54,6 +54,9 @@ class ShapeDetector:
 		return minid
 			
 	def getlabels(self, ratio):
+		if self.ocr is None:
+			return
+
 		try:
 			recognitionResult = self.ocr['recognitionResult']
 			lines = recognitionResult['lines']
@@ -86,7 +89,7 @@ class ShapeDetector:
 		ret,thresh = cv2.threshold(blurred,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
 		
 		# thresh = cv2.threshold(blurred, 60, 255, cv2.THRESH_BINARY)[1]
-		#thresh = cv2.Canny(blurred, 20, 230)
+		thresh = cv2.Canny(thresh, 50, 200)
 		#thresh = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(10,10)))
 		#thresh = cv2.morphologyEx(thresh, cv2.MORPH_CLOSE, cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(2,2)))
 		image = cv2.cvtColor(thresh, cv2.COLOR_GRAY2BGR)
