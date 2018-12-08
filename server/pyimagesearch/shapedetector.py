@@ -12,14 +12,23 @@ class Box:
 class Line:
 	type = "line"
 
+class Label:
+	def __init__(self, text, box, ratio):
+		self.x = box[0]/ratio
+		self.y = box[1]/ratio
+		self.w = (box[4]-box[0])/ratio
+		self.h = (box[5]-box[1])/ratio
+		self.text = text
 
 
 class ShapeDetector:
-	def __init__(self, source_file_path):
+	def __init__(self, source_file_path, ocr):
 		self.boxes = []
 		self.lines = []
+		self.labels = []
 		self.image = cv2.imread(source_file_path)
 		self.boxid = 0
+		self.ocr = ocr
 		pass
 		
 	def nextboxid(self):
@@ -42,13 +51,28 @@ class ShapeDetector:
 				mindist = dist
 				minid = b.id
 		return minid
-				
+			
+	def getlabels(self, ratio):
+		try:
+			recognitionResult = self.ocr['recognitionResult']
+			lines = recognitionResult['lines']
+			for line in lines:
+				txt = line['text']
+				box = line['boundingBox']
+				self.labels.append(Label(txt, box, ratio))
+
+		except KeyError:
+			return
+		except NameError:
+			return
+		
 
 	def process(self):
 		# load the image and resize it to a smaller factor so that
 		# the shapes can be approximated better
 		image = imutils.resize(self.image, width=600)
-		#ratio = image.shape[0] / float(resized.shape[0])
+		ratio = self.image.shape[0] / float(image.shape[0])
+		self.getlabels(ratio)
 
 		# convert the resized image to grayscale, blur it slightly,
 		# and threshold it
