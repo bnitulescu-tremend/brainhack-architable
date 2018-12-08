@@ -15,10 +15,10 @@ class Line:
 
 class Label:
 	def __init__(self, text, box, ratio):
-		self.x = box[0]/ratio
-		self.y = box[1]/ratio
-		self.w = (box[4]-box[0])/ratio
-		self.h = (box[5]-box[1])/ratio
+		self.x = int((box[0]/ratio))
+		self.y = int(box[1]/ratio)
+		self.w = int((box[4]-box[0])/ratio)
+		self.h = int((box[5]-box[1])/ratio)
 		self.text = text
 
 
@@ -74,12 +74,17 @@ class ShapeDetector:
 		image = imutils.resize(self.image, width=600)
 		ratio = self.image.shape[0] / float(image.shape[0])
 		self.getlabels(ratio)
-
+		
 		# convert the resized image to grayscale, blur it slightly,
 		# and threshold it
 		gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+		
+		for lb in self.labels:
+			gray[lb.y:lb.y+lb.h,lb.x:lb.x+lb.w] = 255
+			
 		blurred = cv2.GaussianBlur(gray, (5, 5), 0)
 		ret,thresh = cv2.threshold(blurred,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
+		
 		# thresh = cv2.threshold(blurred, 60, 255, cv2.THRESH_BINARY)[1]
 		#thresh = cv2.Canny(blurred, 20, 230)
 		#thresh = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(10,10)))
@@ -136,6 +141,9 @@ class ShapeDetector:
 			c = c.astype("int")
 			cv2.drawContours(image, [c], -1, (0, 255, 0), 2)
 
+		for lb in self.labels:
+			cv2.rectangle(image, (lb.x,lb.y), (lb.x+lb.w,lb.y+lb.h),(0,0,255),2)
+		
 		self.processed_image = image
 
 		for l in self.lines:
