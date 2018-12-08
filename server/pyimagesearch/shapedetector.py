@@ -38,7 +38,7 @@ class ShapeDetector:
 		
 	def closestbox(self,x,y):
 		#print("{px}.{py}".format(px=x,py=y))
-		minid = None
+		minbox = None
 		mindist = self.image.size * self.image.size
 		for b in self.boxes:
 			(bx, by, bw, bh) = b.box
@@ -51,10 +51,10 @@ class ShapeDetector:
 			if dist < mindist:
 				mindist = dist
 				minbox = b
-		return minbox
+		return minbox, mindist
 		
 	def closestid(self,x,y):
-		b = self.closestbox(x,y)
+		b, _ = self.closestbox(x,y)
 		if b is None:
 			return 0
 		else:
@@ -97,7 +97,7 @@ class ShapeDetector:
 		
 		# thresh = cv2.threshold(blurred, 60, 255, cv2.THRESH_BINARY)[1]
 		thresh = cv2.Canny(thresh, 50, 200)
-		#thresh = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(10,10)))
+		#thresh = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(2,2)))
 		#thresh = cv2.morphologyEx(thresh, cv2.MORPH_CLOSE, cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(2,2)))
 		image = cv2.cvtColor(thresh, cv2.COLOR_GRAY2BGR)
 
@@ -127,7 +127,7 @@ class ShapeDetector:
 				r.box = cv2.boundingRect(c)
 				(x, y, w, h) = r.box
 				
-				if w > 40 and h > 40:
+				if w > 7 and h > 7:
 					r.text = "*R{id}".format(id=r.id)
 					self.boxes.append(r)
 				
@@ -148,8 +148,8 @@ class ShapeDetector:
 			cv2.drawContours(image, [c], -1, (0, 255, 0), 2)
 
 		for lb in self.labels:
-			b = self.closestbox(lb.x+lb.w/2,lb.y+lb.h/2)
-			if not b is None:
+			b, d = self.closestbox(lb.x+lb.w/2,lb.y+lb.h/2)
+			if d == 0 and not b is None:
 				b.text = lb.text + b.text
 			cv2.rectangle(image, (lb.x,lb.y), (lb.x+lb.w,lb.y+lb.h),(0,0,255),1)
 			
