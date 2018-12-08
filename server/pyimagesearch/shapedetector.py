@@ -9,6 +9,36 @@ class Box:
 	def __init__(self, _id):
 		self.id = _id
 	type = "box"
+	
+	def overlaps(self, b):
+		(x, y, w, h) = self.box
+		(bx, by, bw, bh) = b.box
+		
+		#print("{i}:{px}.{py}.{pw}.{ph}".format(px=x,py=y,pw=w,ph=h,i=self.id))
+		#print("{i}:{px}.{py}.{pw}.{ph}".format(px=bx,py=by,pw=bw,ph=bh,i=b.id))
+
+		# minimal significant overlap - as % of the smallest rectangle
+		minArea = min(w*h, bw*bh) * 0.2
+		#print(minArea)
+	
+		dx = max(min(x + w - bx,bx + bw - x), 0)
+		dy = max(min(y + h - by,by + bh - y), 0)
+		#print("{x}-{y}".format(x=dx,y=dy))
+		
+		return dx * dy > minArea
+		
+	def merge(self, b):
+		(x, y, w, h) = self.box
+		(bx, by, bw, bh) = b.box
+		dx = max (x+w,bx+bw)
+		x = min(x,bx)
+		w = dx-x
+		
+		dy = max (y+h,by+bh)
+		y = min(y,by)
+		h = dy-y
+		
+		self.box = (x, y, w, h)
 
 class Line:
 	type = "line"
@@ -20,7 +50,23 @@ class Label:
 		self.w = int((box[4]-box[0])/ratio)
 		self.h = int((box[5]-box[1])/ratio)
 		self.text = text
-
+		
+def remove_overlaps(boxes):
+	#for b in boxes:
+	#	pprint (" {i}".format(i=b.id))
+	newboxes = []
+	while len(boxes) > 0:
+		box = boxes.pop()
+		copy = True
+		for b in boxes:
+			if box.overlaps(b):
+				#pprint (" {i} <=> {j}".format(i=b.id, j=box.id))
+				b.merge(box)
+				copy = False
+				break
+		if copy:
+			newboxes.append(box)
+	return newboxes
 
 class ShapeDetector:
 	def __init__(self, source_file_path, ocr):
@@ -152,6 +198,11 @@ class ShapeDetector:
 			#c *= ratio
 			c = c.astype("int")
 			cv2.drawContours(image, [c], -1, (0, 255, 0), 2)
+			
+		# reduce overlapping rectangles
+		self.boxes = remove_overlaps(self.boxes)		
+		
+		# put labels on rectangles
 
 		for lb in self.labels:
 			b, d = self.closestbox(lb.x+lb.w/2,lb.y+lb.h/2)
@@ -159,6 +210,8 @@ class ShapeDetector:
 				b.text = lb.text + b.text
 			cv2.rectangle(image, (lb.x,lb.y), (lb.x+lb.w,lb.y+lb.h),(0,0,255),1)
 			
+		# link rectangles with lines
+		
 		for r in self.boxes:
 			(x, y, w, h) = r.box
 			cv2.rectangle(image,(x,y),(x+w,y+h),(255,0,0),2)
