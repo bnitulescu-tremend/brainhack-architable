@@ -35,7 +35,8 @@ def index():
     rmfile(file_path)
     upload.save(file_path)
 
-    trigger_recognize_text(file_url)
+    text = trigger_recognize_text(file_url)
+    pprint(text)
 
     # process image from disk
     img, boxes, lines = process(file_path)
@@ -71,9 +72,12 @@ def trigger_recognize_text(file_url):
     pprint(payload)
     pprint(response)
     pprint(response.headers)
-    get_recognize_text_response(response.headers['Operation-Location'])
+    return get_recognize_text_response(response.headers.get('Operation-Location',""))
 
 def get_recognize_text_response(operation_id):
+    if operation_id == "":
+        return None
+    
     url = operation_id
     
     headers = {
@@ -85,8 +89,11 @@ def get_recognize_text_response(operation_id):
     response = requests.request("GET", url, headers=headers)
     pprint(url)
     pprint(response.text)
-    
-    json_response = json.loads(response.text)
+    try:
+        return json.loads(response.text)
+    except json.JSONDecodeError:
+        return None
+
     recognitionResult = json_response['recognitionResult']
     lines = recognitionResult['lines']
     for line in lines:
