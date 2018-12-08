@@ -42,21 +42,24 @@ class ShapeDetector:
 				mindist = dist
 				minid = b.id
 		return minid
-		
+				
 
 	def process(self):
 		# load the image and resize it to a smaller factor so that
 		# the shapes can be approximated better
-		image = self.image
-		#resized = imutils.resize(image, width=300)
+		image = imutils.resize(self.image, width=600)
 		#ratio = image.shape[0] / float(resized.shape[0])
 
 		# convert the resized image to grayscale, blur it slightly,
 		# and threshold it
 		gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 		blurred = cv2.GaussianBlur(gray, (5, 5), 0)
+		ret,thresh = cv2.threshold(blurred,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
 		# thresh = cv2.threshold(blurred, 60, 255, cv2.THRESH_BINARY)[1]
-		thresh = cv2.Canny(blurred, 50, 200)
+		#thresh = cv2.Canny(blurred, 20, 230)
+		#thresh = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(10,10)))
+		#thresh = cv2.morphologyEx(thresh, cv2.MORPH_CLOSE, cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(2,2)))
+		image = cv2.cvtColor(thresh, cv2.COLOR_GRAY2BGR)
 
 		# find contours in the thresholded image and initialize the
 		# shape detector
@@ -82,19 +85,24 @@ class ShapeDetector:
 			if shape == "rectangle":
 				r = Box(self.nextboxid())
 				r.box = cv2.boundingRect(c)
-				r.text = "rectangle {id}".format(id=r.id)
-				displaytxt = r.text
-				self.boxes.append(r)
-				
 				(x, y, w, h) = r.box
-				cv2.rectangle(image,(x,y),(x+w,y+h),(255,0,0),2)
+				
+				if w > 40 and h > 40:
+					r.text = "rectangle {id}".format(id=r.id)
+					self.boxes.append(r)
+					
+					cv2.rectangle(image,(x,y),(x+w,y+h),(255,0,0),2)
+					cv2.putText(image, r.text, (cX, cY), cv2.FONT_HERSHEY_SIMPLEX,
+						0.5, (255, 0, 0), 2)
 				
 			elif shape == "line":
 				l = Line()
 				l.box = cv2.boundingRect(c)
 				l.text = "line {id}".format(id=self.nextboxid())
-				displaytxt = l.text
 				self.lines.append(l)
+				cv2.drawContours(image, [c], -1, (0, 255, 0), 2)
+				cv2.putText(image, l.text, (cX, cY), cv2.FONT_HERSHEY_SIMPLEX,
+					0.5, (255, 0, 0), 2)
 			
 			# multiply the contour (x, y)-coordinates by the resize ratio,
 			# then draw the contours and the name of the shape on the image
@@ -102,8 +110,6 @@ class ShapeDetector:
 			#c *= ratio
 			c = c.astype("int")
 			cv2.drawContours(image, [c], -1, (0, 255, 0), 2)
-			cv2.putText(image, displaytxt, (cX, cY), cv2.FONT_HERSHEY_SIMPLEX,
-				0.5, (255, 0, 0), 2)
 
 		self.processed_image = image
 

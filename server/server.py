@@ -5,6 +5,9 @@ import os
 import imutils
 import cv2
 import numpy as np
+from requests import request
+import json
+
 from generateModel import generateArchiFile
 
 save_path = "/tmp/brainhack"
@@ -24,6 +27,7 @@ def index():
         return 'File extension not allowed.'
 
     file_path = get_save_path(upload.filename)
+    file_url = '{scheme}://{host}/static/{file}.{ext}'.format(scheme=request.urlparts.scheme, host=request.get_header('host'), path=save_path, file=name, ext=ext)
 
     # save source image to disk
     rmfile(file_path)
@@ -36,8 +40,7 @@ def index():
     # write processed image on disk
 
     cv2.imwrite("{path}/{file}_processed{ext}".format(path=save_path, file=name, ext=ext), img)
-
-
+    
     processed_url = '{scheme}://{host}/static/{file}_processed{ext}'.format(scheme=request.urlparts.scheme, host=request.get_header('host'), path=save_path, file=name, ext=ext)
     archi_url = '{scheme}://{host}/static/{file}_processed.{ext}'.format(scheme=request.urlparts.scheme, host=request.get_header('host'), path=save_path, file=name, ext="archimate")
     return HTTPResponse(
@@ -48,6 +51,40 @@ def index():
                 headers={'Location': processed_url}
             )
 
+def trigger_recognize_text(file_url):
+    url = "https://westeurope.api.cognitive.microsoft.com/vision/v1.0/recognizeText"
+
+    querystring = {"handwriting":"true"}
+
+    payload = "{\"url\":\"" + file_url + "\"}"
+    headers = {
+        'content-type': "application/json",
+        'ocp-apim-subscription-key': "7201b974a7b544ccbc2620f2e922562f",
+        'cache-control': "no-cache"
+    }
+
+    response = requests.request("POST", url, data=payload, headers=headers, params=querystring)
+    get_recognize_text_response(response.headers['operation-location'])
+
+def get_recognize_text_response(operation_id):
+    url = "https://westeurope.api.cognitive.microsoft.com/vision/v1.0/textOperations/" + operation_id
+    
+    headers = {
+        'ocp-apim-subscription-key': "7201b974a7b544ccbc2620f2e922562f",
+        'cache-control': "no-cache"
+    }
+
+    response = requests.request("GET", url, headers=headers)
+
+    pprint(response.text)
+    
+    json_response = json.loads(response.text)
+    recognitionResult = json_response['recognitionResult']
+    lines = recognitionResult['lines']
+    for line in lines:
+        boundingBox = line['boundingBox']
+        text = line['text'] 
+    
 def get_save_path(filename):
     if not os.path.exists(save_path):
         os.makedirs(save_path)
@@ -59,6 +96,7 @@ def rmfile(filename):
         os.remove(filename)
     except OSError:
         pass
+
 def process(source_file_path):
     sd = ShapeDetector(source_file_path)
     sd.process()
