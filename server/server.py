@@ -81,7 +81,7 @@ class ArchResources:
             
 def send_arhitecture_request(text_json):
     if text_json is None:
-    return
+        return
     try:
         ar = ArchResources()
         
