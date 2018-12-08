@@ -222,11 +222,14 @@ class ShapeDetector:
 		
 		self.processed_image = image
 
+		newlines = []
 		for l in self.lines:
 			(x, y, w, h) = l.box
 			l.boxes = [ self.closestid(x,y), self.closestid(x+w,y+h) ]
+			if l.boxes[0] != l.boxes[1]:
+				newlines.append(l)
 			cv2.line(image,(x,y),(x+w,y+h),(0,255,0),2)
-
+		self.lines = newlines
 
 	def detect(self, c):
 		# initialize the shape name and approximate the contour

@@ -17,6 +17,8 @@ save_path = "/tmp/brainhack"
 
 @route('/static/<filepath:re:.*\.(jpg|jpeg|png|archimate)>')
 def staticfile(filepath):
+    if filepath.endswith("archimate"):
+        return static_file(filepath, root = save_path, mimetype='application/octet-stream' )
     return static_file(filepath, root = save_path)
 
 @route('/upload', method='POST')
