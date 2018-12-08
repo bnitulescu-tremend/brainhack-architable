@@ -38,7 +38,7 @@ class ShapeDetector:
 		
 	def closestbox(self,x,y):
 		#print("{px}.{py}".format(px=x,py=y))
-		minid = 0
+		minid = None
 		mindist = self.image.size * self.image.size
 		for b in self.boxes:
 			(bx, by, bw, bh) = b.box
@@ -50,8 +50,15 @@ class ShapeDetector:
 			#print("{i}:{px}.{py}.{pw}.{ph}=>{d}".format(px=bx,py=by,pw=bw,ph=bh,d=dist,i=b.id))
 			if dist < mindist:
 				mindist = dist
-				minid = b.id
-		return minid
+				minbox = b
+		return minbox
+		
+	def closestid(self,x,y):
+		b = self.closestbox(x,y)
+		if b is None:
+			return 0
+		else:
+			return b.id
 			
 	def getlabels(self, ratio):
 		if self.ocr is None:
@@ -121,21 +128,17 @@ class ShapeDetector:
 				(x, y, w, h) = r.box
 				
 				if w > 40 and h > 40:
-					r.text = "rectangle {id}".format(id=r.id)
+					r.text = "*R{id}".format(id=r.id)
 					self.boxes.append(r)
-					
-					cv2.rectangle(image,(x,y),(x+w,y+h),(255,0,0),2)
-					cv2.putText(image, r.text, (cX, cY), cv2.FONT_HERSHEY_SIMPLEX,
-						0.5, (255, 0, 0), 2)
 				
 			elif shape == "line":
 				l = Line()
 				l.box = cv2.boundingRect(c)
-				l.text = "line {id}".format(id=self.nextboxid())
+				l.text = "L{id}".format(id=self.nextboxid())
 				self.lines.append(l)
 				cv2.drawContours(image, [c], -1, (0, 255, 0), 2)
 				cv2.putText(image, l.text, (cX, cY), cv2.FONT_HERSHEY_SIMPLEX,
-					0.5, (255, 0, 0), 2)
+					0.5, (255, 255, 0), 2)
 			
 			# multiply the contour (x, y)-coordinates by the resize ratio,
 			# then draw the contours and the name of the shape on the image
@@ -145,13 +148,23 @@ class ShapeDetector:
 			cv2.drawContours(image, [c], -1, (0, 255, 0), 2)
 
 		for lb in self.labels:
-			cv2.rectangle(image, (lb.x,lb.y), (lb.x+lb.w,lb.y+lb.h),(0,0,255),2)
+			b = self.closestbox(lb.x+lb.w/2,lb.y+lb.h/2)
+			if not b is None:
+				b.text = lb.text + b.text
+			cv2.rectangle(image, (lb.x,lb.y), (lb.x+lb.w,lb.y+lb.h),(0,0,255),1)
+			
+		for r in self.boxes:
+			(x, y, w, h) = r.box
+			cv2.rectangle(image,(x,y),(x+w,y+h),(255,0,0),2)
+			cv2.putText(image, r.text, (x+w/2, y+h/2), cv2.FONT_HERSHEY_SIMPLEX,
+				0.5, (255, 255, 0), 2)
+			
 		
 		self.processed_image = image
 
 		for l in self.lines:
 			(x, y, w, h) = l.box
-			l.boxes = [ self.closestbox(x,y), self.closestbox(x+w,y+h) ]
+			l.boxes = [ self.closestid(x,y), self.closestid(x+w,y+h) ]
 
 
 	def detect(self, c):
@@ -170,11 +183,11 @@ class ShapeDetector:
 			# compute the bounding box of the contour and use the
 			# bounding box to compute the aspect ratio
 			(x, y, w, h) = cv2.boundingRect(approx)
-			ar = w / float(h)
+			#ar = w / float(h)
 
 			# a square will have an aspect ratio that is approximately
 			# equal to one, otherwise, the shape is a rectangle
-			shape = "square" if ar >= 0.95 and ar <= 1.05 else "rectangle"
+			shape = "rectangle"
 
 		# if the shape is a pentagon, it will have 5 vertices
 		#elif len(approx) == 5:
