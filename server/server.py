@@ -1,14 +1,16 @@
 from bottle import route, run, template, request, static_file, HTTPResponse
+import bottle
 from pyimagesearch.shapedetector import ShapeDetector
-
+import time
 import os
 import imutils
 import cv2
 import numpy as np
-from requests import request
 import json
-
+import requests
+from pprint import pprint
 from generateModel import generateArchiFile
+from paste import httpserver
 
 save_path = "/tmp/brainhack"
 
@@ -27,11 +29,13 @@ def index():
         return 'File extension not allowed.'
 
     file_path = get_save_path(upload.filename)
-    file_url = '{scheme}://{host}/static/{file}.{ext}'.format(scheme=request.urlparts.scheme, host=request.get_header('host'), path=save_path, file=name, ext=ext)
+    file_url = '{scheme}://{host}/static/{file}{ext}'.format(scheme=request.urlparts.scheme, host=request.get_header('host'), path=save_path, file=name, ext=ext)
 
     # save source image to disk
     rmfile(file_path)
     upload.save(file_path)
+
+    trigger_recognize_text(file_url)
 
     # process image from disk
     img, boxes, lines = process(file_path)
@@ -64,18 +68,22 @@ def trigger_recognize_text(file_url):
     }
 
     response = requests.request("POST", url, data=payload, headers=headers, params=querystring)
-    get_recognize_text_response(response.headers['operation-location'])
+    pprint(payload)
+    pprint(response)
+    pprint(response.headers)
+    get_recognize_text_response(response.headers['Operation-Location'])
 
 def get_recognize_text_response(operation_id):
-    url = "https://westeurope.api.cognitive.microsoft.com/vision/v1.0/textOperations/" + operation_id
+    url = operation_id
     
     headers = {
         'ocp-apim-subscription-key': "7201b974a7b544ccbc2620f2e922562f",
         'cache-control': "no-cache"
     }
 
+    time.sleep(3)
     response = requests.request("GET", url, headers=headers)
-
+    pprint(url)
     pprint(response.text)
     
     json_response = json.loads(response.text)
@@ -103,4 +111,6 @@ def process(source_file_path):
     return sd.processed_image, sd.boxes, sd.lines
 
 
-run(host='0.0.0.0', port=8080)
+#run(host='0.0.0.0', port=8080)
+application = bottle.default_app()
+httpserver.serve(application, host='0.0.0.0', port=8080)
