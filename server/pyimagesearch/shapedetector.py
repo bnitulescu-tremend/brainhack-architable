@@ -134,6 +134,12 @@ class ShapeDetector:
 			elif shape == "line":
 				l = Line()
 				l.box = cv2.boundingRect(c)
+				[vx,vy,x,y] = cv2.fitLine(c, cv2.DIST_L2,0,0.01,0.01)
+				if vy < 0:
+					#line going low left - upper right
+					(x, y, w, h) = l.box
+					l.box = (x, y+h, w, -h)
+					
 				l.text = "L{id}".format(id=self.nextboxid())
 				self.lines.append(l)
 				cv2.drawContours(image, [c], -1, (0, 255, 0), 2)
