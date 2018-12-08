@@ -140,12 +140,12 @@ class ShapeDetector:
 			
 		blurred = cv2.GaussianBlur(gray, (5, 5), 0)
 		ret,thresh = cv2.threshold(blurred,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
+		image = cv2.cvtColor(thresh, cv2.COLOR_GRAY2BGR)
 		
 		# thresh = cv2.threshold(blurred, 60, 255, cv2.THRESH_BINARY)[1]
 		thresh = cv2.Canny(thresh, 50, 200)
 		#thresh = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(2,2)))
 		#thresh = cv2.morphologyEx(thresh, cv2.MORPH_CLOSE, cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(2,2)))
-		image = cv2.cvtColor(thresh, cv2.COLOR_GRAY2BGR)
 
 		# find contours in the thresholded image and initialize the
 		# shape detector
@@ -174,7 +174,8 @@ class ShapeDetector:
 				(x, y, w, h) = r.box
 				
 				if w > 7 and h > 7:
-					r.text = "*R{id}".format(id=r.id)
+					r.text = ""
+					#r.text = "*R{id}".format(id=r.id)
 					self.boxes.append(r)
 				
 			elif shape == "line":
@@ -188,16 +189,16 @@ class ShapeDetector:
 					
 				l.text = "L{id}".format(id=self.nextboxid())
 				self.lines.append(l)
-				cv2.drawContours(image, [c], -1, (0, 255, 0), 2)
-				cv2.putText(image, l.text, (cX, cY), cv2.FONT_HERSHEY_SIMPLEX,
-					0.5, (255, 255, 0), 2)
+				#cv2.drawContours(image, [c], -1, (0, 255, 0), 2)
+				#cv2.putText(image, l.text, (cX, cY), cv2.FONT_HERSHEY_SIMPLEX,
+				#	0.5, (255, 255, 0), 2)
 			
 			# multiply the contour (x, y)-coordinates by the resize ratio,
 			# then draw the contours and the name of the shape on the image
 			c = c.astype("float")
 			#c *= ratio
 			c = c.astype("int")
-			cv2.drawContours(image, [c], -1, (0, 255, 0), 2)
+			#cv2.drawContours(image, [c], -1, (0, 255, 0), 2)
 			
 		# reduce overlapping rectangles
 		self.boxes = remove_overlaps(self.boxes)		
@@ -208,7 +209,7 @@ class ShapeDetector:
 			b, d = self.closestbox(lb.x+lb.w/2,lb.y+lb.h/2)
 			if d == 0 and not b is None:
 				b.text = lb.text + b.text
-			cv2.rectangle(image, (lb.x,lb.y), (lb.x+lb.w,lb.y+lb.h),(0,0,255),1)
+			#cv2.rectangle(image, (lb.x,lb.y), (lb.x+lb.w,lb.y+lb.h),(0,0,255),1)
 			
 		# link rectangles with lines
 		
@@ -216,7 +217,7 @@ class ShapeDetector:
 			(x, y, w, h) = r.box
 			cv2.rectangle(image,(x,y),(x+w,y+h),(255,0,0),2)
 			cv2.putText(image, r.text, (x+w/2, y+h/2), cv2.FONT_HERSHEY_SIMPLEX,
-				0.5, (255, 255, 0), 2)
+				0.5, (0, 0, 255), 2)
 			
 		
 		self.processed_image = image
@@ -224,6 +225,7 @@ class ShapeDetector:
 		for l in self.lines:
 			(x, y, w, h) = l.box
 			l.boxes = [ self.closestid(x,y), self.closestid(x+w,y+h) ]
+			cv2.line(image,(x,y),(x+w,y+h),(0,255,0),2)
 
 
 	def detect(self, c):
