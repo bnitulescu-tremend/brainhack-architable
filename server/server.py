@@ -80,6 +80,8 @@ class ArchResources:
         return json.JSONEncoder().encode(jobj)
             
 def send_arhitecture_request(text_json):
+    if text_json is None:
+	return
     try:
         ar = ArchResources()
         
@@ -104,10 +106,12 @@ def send_arhitecture_request(text_json):
             'content-type': "application/json",
              'cache-control': "no-cache"
         }
-        response = requests.request("POST", url, data=payload, headers=headers, params=querystring,timeout = 3)
-        pprint(payload)
-        pprint(response)
-
+        try:
+            response = requests.request("POST", url, data=payload, headers=headers, params="",timeout = 3)
+            pprint(payload)
+            pprint(response)
+        except ConnectTimeout:
+            return
     except KeyError:
         return
     except NameError:
@@ -125,11 +129,14 @@ def trigger_recognize_text(file_url):
         'cache-control': "no-cache"
     }
 
-    response = requests.request("POST", url, data=payload, headers=headers, params=querystring, timeout = 5)
-    pprint(payload)
-    pprint(response)
-    pprint(response.headers)
-    return get_recognize_text_response(response.headers.get('Operation-Location',""))
+    try:
+        response = requests.request("POST", url, data=payload, headers=headers, params=querystring, timeout = 5)
+        pprint(payload)
+        pprint(response)
+        pprint(response.headers)
+        return get_recognize_text_response(response.headers.get('Operation-Location',""))
+    except ConnectTimeout:
+        return None
 
 def get_recognize_text_response(operation_id):
     if operation_id == "":
@@ -143,14 +150,17 @@ def get_recognize_text_response(operation_id):
     }
 
     time.sleep(3)
-    response = requests.request("GET", url, headers=headers, timeout = 5)
-    pprint(url)
-    pprint(response.text)
     try:
-        return json.loads(response.text)
-    except json.JSONDecodeError:
+        response = requests.request("GET", url, headers=headers, timeout = 5)
+        pprint(url)
+        pprint(response.text)
+        try:
+            return json.loads(response.text)
+        except json.JSONDecodeError:
+            return None
+    except ConnectTimeout:
         return None
-   
+
 def get_save_path(filename):
     if not os.path.exists(save_path):
         os.makedirs(save_path)
