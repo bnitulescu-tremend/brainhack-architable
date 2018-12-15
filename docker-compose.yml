@@ -1,0 +1,10 @@
+version: '3.7'
+
+services:
+  archie-server:
+    build:
+      context: server
+      dockerfile: ../Dockerfile
+    image: archie-server
+    volumes:
+      - ./server:/project
